@@ -74,7 +74,7 @@ function printMapSlow()
 }
 function printMap()
 {
-	clear
+	printf "\033[H"
 	for ((y=0; y<map_height; ++y))
 	do
 		for ((x=0; x<map_width; ++x)) 
@@ -97,8 +97,9 @@ function gameOver()
 	else
 		printf "\nYou lost but you ate $apples apples!\n"
 	fi
-	sleep 2
-	kill $input_pid
+	sleep 1
+	kill "$input_pid"
+	showCursor
 	exit
 }
 
@@ -209,7 +210,7 @@ function updateSnake()
 	((snake_x += snake_vel_x))
 	((snake_y += snake_vel_y))
 
-	if [[ $prev_prev_snake_x == $snake_x ]] && [[ $prev_prev_snake_y == $snake_y ]]
+	if [[ $prev_prev_snake_x == $snake_x ]] && [[ $prev_prev_snake_y == $snake_y ]] && (( $apples >= 1 ))
 	then
 		((snake_x -= snake_vel_x))
 		((snake_x -= snake_vel_x))
@@ -271,6 +272,7 @@ function updateSnake()
 
 
 hideCursor
+clear
 while :
 do
 	start=$(now)
