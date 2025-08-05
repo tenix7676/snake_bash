@@ -1,12 +1,5 @@
 #!/usr/bin/env bash
-names=('One name' 'another word' 'third')
-function list()
-{
-	for arg in "$@"
-	do
-		printf \'"${arg}"\''\n'
-	done
-}
+
 function now()
 {
 	date +%s%3N
@@ -14,18 +7,6 @@ function now()
 
 input_pid=$1
 
-#My snake game
-#snake pos
-#list of moves 0,1,2,3
-#array that is appended to
-#snake size
-#
-#'print' snake - set chars in map
-#take tail pos
-#take moves
-#
-#get all snake positions
-#return head pos
 function hideCursor()
 {
 	printf '\033[?25l'
@@ -162,23 +143,6 @@ function displaySnake()
 	do
 		mapAt "${snake_xs[i]}" "${snake_ys[i]}" "$1"
 	done
-}
-
-function inverseKey()
-{
-		if [[ $1 == w ]] || [[ $1 == k ]]
-		then
-			echo s
-		elif [[ $1 == s ]] || [[ $1 == j ]]
-		then
-			echo w
-		elif [[ $1 == d ]] || [[ $1 == l ]]
-		then
-			echo a
-		elif [[ $1 == a ]] || [[ $1 == h ]]
-		then
-			echo d
-		fi
 }
 
 
