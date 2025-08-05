@@ -74,7 +74,7 @@ function printMapSlow()
 }
 function printMap()
 {
-	#clear
+	clear
 	for ((y=0; y<map_height; ++y))
 	do
 		for ((x=0; x<map_width; ++x)) 
@@ -181,6 +181,8 @@ function inverseKey()
 }
 
 
+apple_x=$(( $RANDOM % map_width ))
+apple_y=$(( $RANDOM % map_height ))
 function updateSnake()
 {
 
@@ -207,17 +209,13 @@ function updateSnake()
 	((snake_x += snake_vel_x))
 	((snake_y += snake_vel_y))
 
-	echo "prev snake x: " $prev_prev_snake_x  "snake x: " $snake_x
-	echo "prev snake y: " $prev_prev_snake_y   "snake y: " $snake_y
 	if [[ $prev_prev_snake_x == $snake_x ]] && [[ $prev_prev_snake_y == $snake_y ]]
 	then
-		echo "AAAAAAAAAAAAAAAAAAAAAAAA"
 		((snake_x -= snake_vel_x))
 		((snake_x -= snake_vel_x))
 		((snake_y -= snake_vel_y))
 		((snake_y -= snake_vel_y))
 
-		printf "\nsnake_x: $snake_x, snake_y: $snake_y"
 	fi
 
 
@@ -242,19 +240,22 @@ function updateSnake()
 	topAppend moves $key
 	
 	local apple='false'
-	if ((temp_i % 4 == 0))
+	mapAt apple_x apple_y '()'
+
+	if (( snake_x == apple_x )) && (( snake_y == apple_y ))
 	then
 		((apples+=1))
 		apple='true'
 		topAppend snake_xs $snake_x
 		topAppend snake_ys $snake_y
 		topAppend moves $key
+		apple_x=$(( $RANDOM % map_width ))
+		apple_y=$(( $RANDOM % map_height ))
 	fi
 	displaySnake '<>'
 
 	if [[ "$(mapAt snake_x snake_y)" == "<>" ]] && [[ $apple == 'false' ]] 
 	then
-		echo Fuck me 
 		gameOver
 	fi
 	mapAt snake_x snake_y '**'
@@ -268,6 +269,7 @@ function updateSnake()
 	prev_snake_y=$snake_y
 }
 
+
 hideCursor
 while :
 do
@@ -280,7 +282,7 @@ do
 	delta_time=$((end - start))
 	printf "fps: $(echo "scale=3; 1000.0 / $delta_time" | bc)"
 	#100ms for each frame, 10 fps
-	sleep_time=$((1000 - delta_time))
+	sleep_time=$((100 - delta_time))
 	printf $sleep_time
 	if ((sleep_time < 0))
 	then
