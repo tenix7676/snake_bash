@@ -57,9 +57,9 @@ function readInput() {
 }
 function gameOver() {
   if ((length == 2)); then
-    printf "\nYou lost but you ate $length apple!\n"
+	  printf "\nYou lost but you ate $((length-1)) apple!\n"
   else
-    printf "\nYou lost but you ate $length apples!\n"
+	  printf "\nYou lost but you ate $((length-1)) apples!\n"
   fi
   sleep 1
   showCursor
@@ -69,9 +69,9 @@ function gameOver() {
 
 function gameWon() {
   if ((length == 2)); then
-    printf "\nYou won, cograts! You ate $length apple!\n"
+	  printf "\nYou won, cograts! You ate $((length-1)) apple!\n"
   else
-    printf "\nYou won, congrats! You ate $length apples!\n"
+	  printf "\nYou won, congrats! You ate $((length-1)) apples!\n"
   fi
   sleep 1
   showCursor
@@ -167,7 +167,7 @@ function randomiseApple {
 	do
 		for (( y=0; y < map_height; ++y ))
 		do
-			if [[ $(mapAt $x $y) != "<>" ]]
+			if [[ $(mapAt $x $y) != "<>" ]] && [[ $(mapAt $x $y) != "**" ]]
 			then
 				if (( i == rand_pos ))
 				then
@@ -186,6 +186,14 @@ function displayApple {
 }
 
 function updateSnake {
+	if (( length == map_size ))
+	then
+		displaySnake
+		mapAt $next_snake_x $next_snake_y "**"
+		echo
+		echo Wow, you got the whole grid!
+		gameWon
+	fi
 	vel=($(getVelocity))
 	vel_x="${vel[0]}"
 	vel_y="${vel[1]}"
@@ -222,7 +230,10 @@ function updateSnake {
 		bot_del
 	else
 		mapAt $(bot_get) "<>"
-		randomiseApple
+		if (( length != map_size ))
+		then
+			randomiseApple
+		fi
 	fi
 }
 
@@ -240,13 +251,13 @@ do
 	updateSnake
 	printMap
 	echo length: $length
-	(( target_ms = 300 - (length-1) * 10 ))
+	#400ms for each frame, 2.5 fps
+	(( target_ms = 400 - (length-1) * 10 ))
 	echo "actual  ms/frame: $target_ms"
 	echo "actual  frames/s: $(echo "scale=3; 1000.0 / $target_ms" | bc)"
 	echo "        frames/s: $(echo "scale=3; 1000.0 / $delta_time" | bc)"
 	end=$(now)
 	delta_time=$((end - start))
-	#300ms for each frame, 3.33 fps
 	sleep_time=$((target_ms - delta_time))
 	#I dont think anyone should play at a speed faster than 100ms a frame ;-;
 	if ((target_ms < 100))
