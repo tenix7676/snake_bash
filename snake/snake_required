@@ -1,0 +1,258 @@
+#!/usr/bin/env bash
+
+function now() {
+  date +%s%3N
+}
+
+input_pid=$1
+
+function hideCursor() {
+  printf '\033[?25l'
+}
+function showCursor() {
+  printf '\033[?25h'
+}
+
+map_width=10
+map_height=9
+map_size=$((map_width * map_height))
+declare -a map
+function mapAt() {
+  #x, y, char
+  if (($# >= 3)); then
+    map[$2 * map_width + $1]="$3"
+  else
+    printf "${map[$2 * map_width + $1]}"
+  fi
+}
+function initializeMap() {
+  for ((i = 0; i < map_size; ++i)); do
+    map[${i}]='┼─'
+  done
+}
+
+function printMapSlow() {
+  clear
+  out=
+  for ((y = 0; y < map_height; ++y)); do
+    for ((x = 0; x < map_width; ++x)); do
+      out+="$(mapAt x y)"
+    done
+    out+=\\n
+  done
+  printf "${out}"
+}
+function printMap() {
+  printf "\033[H"
+  for ((y = 0; y < map_height; ++y)); do
+    for ((x = 0; x < map_width; ++x)); do
+      printf "$(mapAt x y)"
+    done
+    printf \\n
+  done
+}
+key=
+function readInput() {
+  key=$(<input.txt)
+}
+function gameOver() {
+  if ((length == 2)); then
+    printf "\nYou lost but you ate $length apple!\n"
+  else
+    printf "\nYou lost but you ate $length apples!\n"
+  fi
+  sleep 1
+  showCursor
+  kill "$input_pid"
+  exit
+}
+
+function gameWon() {
+  if ((length == 2)); then
+    printf "\nYou won, cograts! You ate $length apple!\n"
+  else
+    printf "\nYou won, congrats! You ate $length apples!\n"
+  fi
+  sleep 1
+  showCursor
+  kill "$input_pid"
+  exit
+}
+
+
+declare -a snake_x
+declare -a snake_y
+length=0
+
+
+function top_del {
+	snake_x=("${snake_x[@]:0:length - 1}")
+	snake_y=("${snake_y[@]:0:length - 1}")
+	(( length-=1 ))
+}
+function top_add {
+	snake_x+=($1)
+	snake_y+=($2)
+	(( length += 1 ))
+}
+function bot_del {
+	snake_x=("${snake_x[@]:1:length - 1}")
+	snake_y=("${snake_y[@]:1:length - 1}")
+	(( length-=1 ))
+}
+function bot_add {
+	temp=("${snake_x[@]}")
+	snake_x=($1)
+	snake_x+=("${temp[@]}")
+	temp=("${snake_y[@]}")
+	snake_y=($2)
+	snake_y+=("${temp[@]}")
+	(( length+=1 ))
+}
+
+function top_get {
+	echo ${snake_x[length-1]} ${snake_y[length-1]}
+}
+
+function bot_get {
+	echo $snake_x $snake_y
+}
+
+function getVelocity {
+	input="$key"
+
+	if [[ $input == "w" ]] || [[ $input == "k" ]]
+	then
+		echo 0 -1
+	elif [[ $input == "s" ]] || [[ $input == "j" ]]
+	then
+		echo 0 +1
+	elif [[ $input == "d" ]] || [[ $input == "l" ]]
+	then
+		echo +1 0
+	else
+		echo -1 0
+	fi
+}
+
+function checkCollision {
+	#Out of bounds
+	if (( $1 >= $map_width )) || (( $1 < 0 )) || (( $2 >= $map_height )) || (( $2 < 0 ))
+	then
+		echo out_of_bounds
+	#Snake
+	elif [[ $(mapAt $1 $2) == "<>" ]]
+	then
+		echo snake
+	#Apple
+	elif [[ $(mapAt $1 $2) == "()" ]]
+	then
+		echo apple
+	fi
+}
+
+function displaySnake {
+	#Skip the tail, since its gonna move out of the way the next frame
+	for (( index=1; index < length; ++index ))
+	do
+		mapAt "${snake_x[$index]}" "${snake_y[$index]}" "<>"
+	done
+}
+
+function randomiseApple {
+	(( free_spaces = map_size - length ))
+	(( rand_pos = $RANDOM % free_spaces ))
+	i=0
+	for (( x=0; x < map_width; ++x ))
+	do
+		for (( y=0; y < map_height; ++y ))
+		do
+			if [[ $(mapAt $x $y) != "<>" ]]
+			then
+				if (( i == rand_pos ))
+				then
+					apple_x=$x
+					apple_y=$y
+					break 2
+				fi
+				(( ++i ))
+			fi
+		done
+	done
+}
+
+function displayApple {
+	mapAt $apple_x $apple_y "()"
+}
+
+function updateSnake {
+	vel=($(getVelocity))
+	vel_x="${vel[0]}"
+	vel_y="${vel[1]}"
+	current_snake_pos=($(top_get))
+	current_snake_x="${current_snake_pos[0]}"
+	current_snake_y="${current_snake_pos[1]}"
+	(( next_snake_x=current_snake_x+vel_x ))
+	(( next_snake_y=current_snake_y+vel_y ))
+	displaySnake
+	displayApple
+	collision_check=$( checkCollision $next_snake_x $next_snake_y )
+	if [[ $collision_check == out_of_bounds ]] || [[ $collision_check == snake ]]
+	then
+		prev_snake_x="${snake_x[length - 2]}"
+		prev_snake_y="${snake_y[length - 2]}"
+		if [[ $prev_snake_x == $next_snake_x ]] && [[ $prev_snake_y == $next_snake_y ]]
+		then
+			(( next_snake_x=current_snake_x-vel_x ))
+			(( next_snake_y=current_snake_y-vel_y ))
+			collision_check=$( checkCollision $next_snake_x $next_snake_y )
+			if [[ $collision_check == out_of_bounds ]] || [[ $collision_check == snake ]]
+			then
+				gameOver
+			fi
+		else
+			gameOver
+		fi
+	fi
+
+	mapAt $next_snake_x $next_snake_y "**"
+	top_add $next_snake_x $next_snake_y
+	if [[ $collision_check != apple ]]
+	then
+		bot_del
+	else
+		mapAt $(bot_get) "<>"
+		randomiseApple
+	fi
+}
+
+top_add $(($map_width/2)) $(($map_height/2))
+randomiseApple
+delta_time=300
+
+hideCursor
+clear
+while :
+do
+	start=$(now)
+	initializeMap
+	readInput
+	updateSnake
+	printMap
+	echo length: $length
+	(( target_ms = 300 - (length-1) * 10 ))
+	echo "actual  ms/frame: $target_ms"
+	echo "actual  frames/s: $(echo "scale=3; 1000.0 / $target_ms" | bc)"
+	echo "        frames/s: $(echo "scale=3; 1000.0 / $delta_time" | bc)"
+	end=$(now)
+	delta_time=$((end - start))
+	#300ms for each frame, 3.33 fps
+	sleep_time=$((target_ms - delta_time))
+	#I dont think anyone should play at a speed faster than 100ms a frame ;-;
+	if ((target_ms < 100))
+	then
+		(( sleep_time = 100 - delta_time ))
+	fi
+	sleep $(echo "scale=3; ($sleep_time) / 1000.0" | bc)
+done
+showCursor
