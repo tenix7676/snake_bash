@@ -1,5 +1,5 @@
 # Requirements
-`bc`
+`bc`, `date`
 # To run
 Get inside the `snake/` directory and run the file called `./snake`. You have to be in that directory because `snake` opens a relative `snake_required`
 # Info
