@@ -39,18 +39,30 @@ function randomKey()
 
 key=
 last_key=
-wait_time=.02
+wait_time=20 #in ms
+(( numerical_part = wait_time / 1000 ))
+(( thousands_part = wait_time % 10 ))
+(( hundreds_part = wait_time % 100 / 10 ))
+(( decimal_part = wait_time % 1000 / 100 ))
+wait_time_s="$numerical_part"."$decimal_part""$hundreds_part""$thousands_part"
+echo $wait_time_s
+
 touch input.txt
 while :
 do
 	start=$(now)
-	if read -s -t $wait_time -n 1 key
+	if read -s -t $wait_time_s -n 1 key
 	then
 		end=$(($(now) - 10)) #-10ms to give some leeway
 		echo "$key" >| input.txt
 		last_key=$key
 		delta_time=$(( (end - start) ))
-		sleep $(echo "scale=3; $wait_time - $delta_time / 1000.0" | bc)
+		(( sleep_time = wait_time - delta_time ))
+		(( numerical_part = sleep_time / 1000 ))
+		(( thousands_part = sleep_time % 10 ))
+		(( hundreds_part = sleep_time % 100 / 10 ))
+		(( decimal_part = sleep_time % 1000 / 100 ))
+		sleep "$numerical_part"."$decimal_part""$hundreds_part""$thousands_part"
 	else
 		echo "$last_key" >| input.txt
 	fi

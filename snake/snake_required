@@ -254,8 +254,18 @@ do
 	#400ms for each frame, 2.5 fps
 	(( target_ms = 400 - (length-1) * 10 ))
 	echo "actual  ms/frame: $target_ms"
-	echo "actual  frames/s: $(echo "scale=3; 1000.0 / $target_ms" | bc)"
-	echo "        frames/s: $(echo "scale=3; 1000.0 / $delta_time" | bc)"
+	(( target_fps = 1000000 / target_ms ))
+	(( numerical_part = target_fps / 1000 ))
+	(( thousands_part = target_fps % 10 ))
+	(( hundreds_part = target_fps % 100 / 10 ))
+	(( decimal_part = target_fps % 1000 / 100 ))
+	echo "actual  frames/s: "$numerical_part"."$decimal_part""$hundreds_part""$thousands_part""
+	(( fps = 1000000 / delta_time ))
+	(( numerical_part = fps / 1000 ))
+	(( thousands_part = fps % 10 ))
+	(( hundreds_part = fps % 100 / 10 ))
+	(( decimal_part = fps % 1000 / 100 ))
+	echo "        frames/s: "$numerical_part"."$decimal_part""$hundreds_part""$thousands_part""
 	end=$(now)
 	delta_time=$((end - start))
 	sleep_time=$((target_ms - delta_time))
@@ -264,6 +274,10 @@ do
 	then
 		(( sleep_time = 100 - delta_time ))
 	fi
-	sleep $(echo "scale=3; ($sleep_time) / 1000.0" | bc)
+	(( numerical_part = sleep_time / 1000 ))
+	(( thousands_part = sleep_time % 10 ))
+	(( hundreds_part = sleep_time % 100 / 10 ))
+	(( decimal_part = sleep_time % 1000 / 100 ))
+	sleep "$numerical_part"."$decimal_part""$hundreds_part""$thousands_part"
 done
 showCursor
