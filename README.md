@@ -1,6 +1,6 @@
 # Requirements
-`bc`
+`bc`, `date`
 # To run
-Run the file called `snake`
+Get inside the `snake/` directory and run the file called `./snake`. You have to be in that directory because `snake` opens a relative `snake_required`
 # Info
-You can move using **wasd** or **hjkl**. As your length increases the game speeds up.
+You can move using **`wasd`** or **`hjkl`**. As your length increases the game speeds up. After getting the whole grid you win :)
