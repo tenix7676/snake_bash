@@ -265,19 +265,25 @@ do
 	echo length: $length
 	#400ms for each frame, 2.5 fps
 	(( target_ms = 400 - (length-1) * 10 ))
-	echo "actual  ms/frame: $target_ms"
 	(( target_fps = 1000000 / target_ms ))
-	(( numerical_part = target_fps / 1000 ))
-	(( thousands_part = target_fps % 10 ))
-	(( hundreds_part = target_fps % 100 / 10 ))
-	(( decimal_part = target_fps % 1000 / 100 ))
-	echo "actual  frames/s: "$numerical_part"."$decimal_part""$hundreds_part""$thousands_part""
+	(( trg_fps_num = target_fps / 1000 ))
+	(( trg_fps_thou = target_fps % 10 ))
+	(( trg_fps_hund = target_fps % 100 / 10 ))
+	(( trg_fps_deci = target_fps % 1000 / 100 ))
 	(( fps = 1000000 / delta_time ))
-	(( numerical_part = fps / 1000 ))
-	(( thousands_part = fps % 10 ))
-	(( hundreds_part = fps % 100 / 10 ))
-	(( decimal_part = fps % 1000 / 100 ))
-	echo "        frames/s: "$numerical_part"."$decimal_part""$hundreds_part""$thousands_part""
+	(( fps_num = fps / 1000 ))
+	(( fps_thou = fps % 10 ))
+	(( fps_hund = fps % 100 / 10 ))
+	(( fps_deci = fps % 1000 / 100 ))
+	if (( target_ms - delta_time > 0 ))
+	then
+		echo "actual  ms/frame: $target_ms"
+		echo "actual  frames/s: "$trg_fps_num"."$trg_fps_deci""$trg_fps_hund""$trg_fps_thou""
+	else
+		echo "actual ms/frame: $delta_time"
+		echo "actual  frames/s: "$fps_num"."$fps_deci""$fps_hund""$fps_thou""
+	fi
+	echo "        frames/s: "$fps_num"."$fps_deci""$fps_hund""$fps_thou""
 	end=$(now)
 	delta_time=$((end - start))
 	sleep_time=$((target_ms - delta_time))
@@ -286,10 +292,13 @@ do
 	then
 		(( sleep_time = 100 - delta_time ))
 	fi
-	(( numerical_part = sleep_time / 1000 ))
-	(( thousands_part = sleep_time % 10 ))
-	(( hundreds_part = sleep_time % 100 / 10 ))
-	(( decimal_part = sleep_time % 1000 / 100 ))
-	sleep "$numerical_part"."$decimal_part""$hundreds_part""$thousands_part"
+	if (( sleep_time > 0 ))
+	then
+		(( numerical_part = sleep_time / 1000 ))
+		(( thousands_part = sleep_time % 10 ))
+		(( hundreds_part = sleep_time % 100 / 10 ))
+		(( decimal_part = sleep_time % 1000 / 100 ))
+		sleep "$numerical_part"."$decimal_part""$hundreds_part""$thousands_part"
+	fi
 done
 showCursor
