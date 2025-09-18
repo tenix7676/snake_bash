@@ -39,7 +39,7 @@ function randomKey()
 
 key=
 last_key=
-wait_time=20 #in ms
+wait_time=2 #in ms
 (( numerical_part = wait_time / 1000 ))
 (( thousands_part = wait_time % 10 ))
 (( hundreds_part = wait_time % 100 / 10 ))
